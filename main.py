@@ -21,7 +21,8 @@ app = FastAPI()
 origins = [
     "https://cherrygram-frontend-git-main-leansippps-projects.vercel.app",
     "https://cherrygram-frontend-462npxzk0-leansippps-projects.vercel.app",
-    "https://cherrygram.xyz"  # если фронт ещё с этого домена может делать запросы
+    "https://cherrygram.xyz",
+    "https://cherrygram-frontend.vercel.app"# если фронт ещё с этого домена может делать запросы
 ]
 
 app.add_middleware(
