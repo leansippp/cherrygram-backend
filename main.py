@@ -12,21 +12,23 @@ from collections import defaultdict
 import time
 import requests
 import os
-from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # <- разрешаем все домены
+    allow_origins=[
+        "https://cherrygram.xyz",
+        "https://cherrygram.xyz/",
+        "https://cherrygram-frontend.vercel.app"
+    ],  # укажи сюда все домены фронта
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
-
-app = FastAPI(title="Reputation Checker API")
 
 # ===== НАСТРОЙКИ =====
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
