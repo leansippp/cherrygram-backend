@@ -23,6 +23,8 @@ app.add_middleware(
         "https://cherrygram.xyz",
         "https://cherrygram.xyz/",
         "https://cherrygram-frontend.vercel.app",
+        "cherrygram-frontend-bewu2gkcl-leansippps-projects.vercel.app",
+        "cherrygram-frontend-git-main-leansippps-projects.vercel.app",
         "https://t.me",
         "https://web.telegram.org",
         "https://telegram.org"
