@@ -12,6 +12,38 @@ from collections import defaultdict
 import time
 import requests
 import os
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Form
+from fastapi.middleware.cors import CORSMiddleware
+
+# -------------------------
+# Инициализация FastAPI
+# -------------------------
+app = FastAPI()
+
+# -------------------------
+# Настройка CORS
+# -------------------------
+origins = [
+    "https://твоя-фронт-ссылка.vercel.app",  # <-- вставь сюда URL фронта
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # разрешаем фронт
+    allow_credentials=True,
+    allow_methods=["*"],    # GET, POST и др.
+    allow_headers=["*"],    # все заголовки
+)
+
+# -------------------------
+# Пример рутов
+# -------------------------
+@app.get("/")
+async def root():
+    return {"message": "Backend работает!"}
+
+# сюда можно добавить остальные эндпоинты из твоего telegram_miniapp_backend
+
 
 app = FastAPI(title="Reputation Checker API")
 
