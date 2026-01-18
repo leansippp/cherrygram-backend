@@ -24,7 +24,7 @@ app = FastAPI()
 # Настройка CORS
 # -------------------------
 origins = [
-    "https://твоя-фронт-ссылка.vercel.app",  # <-- вставь сюда URL фронта
+    "https://cherrygram.xyz",  # <-- вставь сюда URL фронта
 ]
 
 app.add_middleware(
