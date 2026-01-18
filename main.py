@@ -22,7 +22,10 @@ app.add_middleware(
     allow_origins=[
         "https://cherrygram.xyz",
         "https://cherrygram.xyz/",
-        "https://cherrygram-frontend.vercel.app"
+        "https://cherrygram-frontend.vercel.app",
+        "https://t.me",
+        "https://web.telegram.org",
+        "https://telegram.org"
     ],  # укажи сюда все домены фронта
     allow_credentials=True,
     allow_methods=["*"],
