@@ -333,6 +333,159 @@ async def root():
 async def health():
     return {"status": "healthy"}
 
+# ============================================
+# 🔐 АДМИН API - ДОБАВЬТЕ В КОНЕЦ main.py
+# ============================================
+
+# Секретный ключ для доступа к админке
+ADMIN_SECRET = os.getenv("ADMIN_SECRET", "your-secret-key-12345")
+
+class AddToWhitelistRequest(BaseModel):
+    secret: str
+    username: str
+    profile_image: str = ""
+    profile_description: str = ""
+    profile_badge: str = "✅ Верифицирован"
+
+class AddToScamListRequest(BaseModel):
+    secret: str
+    username: str
+    reason: str
+
+class RemoveUserRequest(BaseModel):
+    secret: str
+    username: str
+
+# Добавить в whitelist с профилем
+@app.post("/admin/add-verified")
+async def admin_add_verified(data: AddToWhitelistRequest):
+    if data.secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Неверный секретный ключ")
+    
+    conn = sqlite3.connect('reputation.db')
+    c = conn.cursor()
+    
+    try:
+        c.execute("""INSERT INTO whitelist 
+                     (username, profile_image, profile_description, profile_badge) 
+                     VALUES (?, ?, ?, ?)""",
+                  (data.username.lower(), data.profile_image, 
+                   data.profile_description, data.profile_badge))
+        conn.commit()
+        conn.close()
+        return {"success": True, "message": f"@{data.username} добавлен в whitelist"}
+    except sqlite3.IntegrityError:
+        conn.close()
+        raise HTTPException(status_code=400, detail="Пользователь уже существует")
+
+# Добавить в scam list
+@app.post("/admin/add-scammer")
+async def admin_add_scammer(data: AddToScamListRequest):
+    if data.secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Неверный секретный ключ")
+    
+    conn = sqlite3.connect('reputation.db')
+    c = conn.cursor()
+    
+    try:
+        c.execute("INSERT INTO scam_list (username, reason) VALUES (?, ?)",
+                 (data.username.lower(), data.reason))
+        conn.commit()
+        conn.close()
+        return {"success": True, "message": f"@{data.username} добавлен в scam list"}
+    except sqlite3.IntegrityError:
+        conn.close()
+        raise HTTPException(status_code=400, detail="Пользователь уже существует")
+
+# Удалить из whitelist
+@app.post("/admin/remove-verified")
+async def admin_remove_verified(data: RemoveUserRequest):
+    if data.secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Неверный секретный ключ")
+    
+    conn = sqlite3.connect('reputation.db')
+    c = conn.cursor()
+    c.execute("DELETE FROM whitelist WHERE username = ?", (data.username.lower(),))
+    conn.commit()
+    
+    if c.rowcount > 0:
+        conn.close()
+        return {"success": True, "message": f"@{data.username} удалён из whitelist"}
+    else:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+
+# Удалить из scam list
+@app.post("/admin/remove-scammer")
+async def admin_remove_scammer(data: RemoveUserRequest):
+    if data.secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Неверный секретный ключ")
+    
+    conn = sqlite3.connect('reputation.db')
+    c = conn.cursor()
+    c.execute("DELETE FROM scam_list WHERE username = ?", (data.username.lower(),))
+    conn.commit()
+    
+    if c.rowcount > 0:
+        conn.close()
+        return {"success": True, "message": f"@{data.username} удалён из scam list"}
+    else:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+
+# Обновить профиль
+@app.post("/admin/update-profile")
+async def admin_update_profile(data: AddToWhitelistRequest):
+    if data.secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Неверный секретный ключ")
+    
+    conn = sqlite3.connect('reputation.db')
+    c = conn.cursor()
+    
+    c.execute("""UPDATE whitelist 
+                 SET profile_image = ?, profile_description = ?, profile_badge = ?
+                 WHERE username = ?""",
+              (data.profile_image, data.profile_description, 
+               data.profile_badge, data.username.lower()))
+    conn.commit()
+    
+    if c.rowcount > 0:
+        conn.close()
+        return {"success": True, "message": f"Профиль @{data.username} обновлён"}
+    else:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+
+# Посмотреть все whitelist
+@app.get("/admin/list-verified/{secret}")
+async def admin_list_verified(secret: str):
+    if secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Неверный секретный ключ")
+    
+    conn = sqlite3.connect('reputation.db')
+    c = conn.cursor()
+    c.execute("SELECT username, profile_badge, verified_at FROM whitelist ORDER BY verified_at DESC")
+    results = c.fetchall()
+    conn.close()
+    
+    users = [{"username": r[0], "badge": r[1], "verified_at": r[2]} for r in results]
+    return {"users": users, "count": len(users)}
+
+# Посмотреть все scam list
+@app.get("/admin/list-scammers/{secret}")
+async def admin_list_scammers(secret: str):
+    if secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="Неверный секретный ключ")
+    
+    conn = sqlite3.connect('reputation.db')
+    c = conn.cursor()
+    c.execute("SELECT username, reason, added_at FROM scam_list ORDER BY added_at DESC")
+    results = c.fetchall()
+    conn.close()
+    
+    scammers = [{"username": r[0], "reason": r[1], "added_at": r[2]} for r in results]
+    return {"scammers": scammers, "count": len(scammers)}
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8000))
